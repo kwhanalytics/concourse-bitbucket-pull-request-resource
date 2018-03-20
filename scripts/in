@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+
+import subprocess
+import os
+import sys
+import json
+import traceback
+import collections
+import yaml
+from bitbucket import (
+    json_pp, err, request_access_token, get_open_prs, BitbucketException
+)
+
+def reformat(key, value):
+    return {
+        "name": str(key),
+        "value": str(value)
+    }
+
+# Helper function to ensure only strings are present since unicode
+# presents errors
+def convert(data):
+    if isinstance(data, str):
+        return str(data)
+    elif isinstance(data, collections.Mapping):
+        return dict(map(convert, data.items()))
+    elif isinstance(data, collections.Iterable):
+        return type(data)(map(convert, data))
+    else:
+        return data
+
+j = json.loads("".join(sys.stdin.readlines()))
+j = convert(j)
+
+debug = j['source'].get('debug', False)
+
+if debug:
+    err(j)
+
+if debug:
+    err("--DEBUG MODE--")
+
+# Configuration vars
+project = j['source']['project']
+repo = j['source']['repo']
+client_id = j['source']['client_id']
+secret = j['source']['secret']
+all_prs = j['source'].get('all_prs',False)
+
+# Version vars
+version = j['version']
+pr_no = version['pr_no']
+
+output_dir = sys.argv[1]
+if debug:
+    err(output_dir)
+
+# Get the access token for the repo and get the open PRs
+try:
+    access_token = request_access_token(client_id, secret, debug)
+    if all_prs:
+        open_pr_request = get_open_prs(project, repo, access_token, debug)
+        prs = open_pr_request.json()['values']
+    else:
+        open_pr_request = get_open_prs(project, repo, access_token, debug, pr_no)
+        prs = [open_pr_request.json()]
+except BitbucketException:
+    traceback.print_exc()
+    err(str(e))
+    exit(1)
+
+# Concourse prefer dictionaries in arrays as output
+
+metadata = []
+pr_list = []
+if all_prs:
+    for data in prs[::-1]:
+        pr = []
+        pr.append(reformat("author", data["author"]["display_name"]))
+        pr.append(reformat("source", data["source"]["branch"]["name"]))
+        pr.append(reformat("destination", data["destination"]["branch"]["name"]))
+        pr.append(reformat("commit", data['source']['commit']['hash'][:8]))
+        pr.append(reformat("username", data['author']['username']))
+        pr.append(reformat("url", data['links']['html']['href']))
+        pr.append(reformat("pr_no", data['id']))
+        pr.append(reformat("repo", data['source']['repository']['name']))
+        pr_list.append(pr)
+    for val in pr_list[-1]:
+        metadata.append(val)
+else:
+    for data in prs:
+        metadata.append(reformat("author", data["author"]["display_name"]))
+        metadata.append(reformat("source", data["source"]["branch"]["name"]))
+        metadata.append(reformat("destination", data["destination"]["branch"]["name"]))
+        metadata.append(reformat("commit", data['source']['commit']['hash'][:8]))
+        metadata.append(reformat("username", data['author']['username']))
+        metadata.append(reformat("url", data['links']['html']['href']))
+
+
+result = {
+    "version": version,
+    "metadata": metadata
+    }
+
+if debug:
+    err(json.dumps(result, indent=2))
+    err(json.dumps(version, indent=2))
+
+sys.stdout.write(json.dumps(result))
+
+# Write out the version information in a yaml file
+with open(os.path.join(output_dir, "version.yaml"), "w") as fp:
+    print(yaml.dump(result, default_flow_style=False), file=fp)
+
+if all_prs:
+    err(len(pr_list))
+    pr_path = os.path.join(output_dir,'prs')
+    os.mkdir(pr_path)
+    with open(os.path.join(pr_path, "prs.yaml"), "w") as fp:
+        print(yaml.dump(pr_list, default_flow_style=False), file=fp)

@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+import subprocess
+import os
+import sys
+import json
+import traceback
+from bitbucket import (
+    json_pp, err, request_access_token, get_open_prs, BitbucketException
+)
+
+def get_item_key(item):
+	return item["updated_on"]
+
+j = json.loads(sys.stdin.read())
+debug = j['source'].get('debug', False)
+
+# Configuration vars
+project = j['source']['project']
+repo = j['source']['repo']
+client_id = j['source']['client_id']
+secret = j['source']['secret']
+
+# Get the access token for the repo and get the open PRs
+try:
+    access_token = request_access_token(client_id, secret, debug)
+    open_pr_request = get_open_prs(project, repo, access_token, debug)
+except BitbucketException:
+    traceback.print_exc()
+    err(str(e))
+    exit(1)
+
+result = []
+for pr in open_pr_request.json()['values']:
+    result.append({
+        "pr_no": str(pr["id"]),
+        "commit": str(pr['source']['commit']['hash'][:8]),
+        "repo": str(pr['source']['repository']['name'])
+    })
+
+print(json.dumps(result[::-1], indent=2))
