@@ -46,6 +46,7 @@ repo = j['source']['repo']
 client_id = j['source']['client_id']
 secret = j['source']['secret']
 all_prs = j['source'].get('all_prs',False)
+state = j['source'].get('state','OPEN')
 
 # Version vars
 version = j['version']
@@ -59,10 +60,10 @@ if debug:
 try:
     access_token = request_access_token(client_id, secret, debug)
     if all_prs:
-        open_pr_request = get_open_prs(project, repo, access_token, debug)
+        open_pr_request = get_open_prs(project, repo, access_token, debug, state=state)
         prs = open_pr_request.json()['values']
     else:
-        open_pr_request = get_open_prs(project, repo, access_token, debug, pr_no)
+        open_pr_request = get_open_prs(project, repo, access_token, debug, pr_no=pr_no)
         prs = [open_pr_request.json()]
 except BitbucketException:
     traceback.print_exc()

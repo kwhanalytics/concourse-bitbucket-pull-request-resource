@@ -54,12 +54,15 @@ def json_pp(json_object):
         raise NameError('Must be a dictionary or json-formatted string')
 
 
-def get_open_prs(project, repo, access_token, debug, pr_no='', **kwargs):
+def get_open_prs(project, repo, access_token, debug, state='OPEN', pr_no='', **kwargs):
     """ Get open pull requests for project/repo
     """
 
-    get_url = "https://api.bitbucket.org/2.0/repositories/{project}/{repo}/pullrequests/{pr_no}?pagelen=30".format(
-        project=project, repo=repo, pr_no=pr_no)
+    get_url = (
+        "https://api.bitbucket.org/2.0/repositories/"
+        "{project}/{repo}/pullrequests/{pr_no}?pagelen=30&state={state}".format(
+        project=project, repo=repo, pr_no=pr_no, state=state)
+    )
     for k,v in kwargs.items():
         get_url = "{url}?{k}={v}".format(url=get_url,k=k,v=v)
 
