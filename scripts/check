@@ -6,7 +6,7 @@ import sys
 import json
 import traceback
 from bitbucket import (
-    json_pp, err, request_access_token, get_open_prs, BitbucketException
+    json_pp, err, request_access_token, get_prs, BitbucketException
 )
 
 def get_item_key(item):
@@ -24,14 +24,14 @@ secret = j['source']['secret']
 # Get the access token for the repo and get the open PRs
 try:
     access_token = request_access_token(client_id, secret, debug)
-    open_pr_request = get_open_prs(project, repo, access_token, debug)
+    open_pr_request = get_prs(project, repo, access_token, debug, state='OPEN')
 except BitbucketException:
     traceback.print_exc()
     err(str(e))
     exit(1)
 
 result = []
-for pr in open_pr_request.json()['values']:
+for pr in open_pr_request:
     result.append({
         "pr_no": str(pr["id"]),
         "commit": str(pr['source']['commit']['hash'][:8]),

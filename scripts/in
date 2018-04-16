@@ -8,7 +8,7 @@ import traceback
 import collections
 import yaml
 from bitbucket import (
-    json_pp, err, request_access_token, get_open_prs, BitbucketException
+    json_pp, err, request_access_token, get_prs, BitbucketException
 )
 
 def reformat(key, value):
@@ -60,11 +60,11 @@ if debug:
 try:
     access_token = request_access_token(client_id, secret, debug)
     if all_prs:
-        open_pr_request = get_open_prs(project, repo, access_token, debug, state=state)
-        prs = open_pr_request.json()['values']
+        open_pr_request = get_prs(project, repo, access_token, debug, state=state)
+        prs = open_pr_request
     else:
         open_pr_request = get_open_prs(project, repo, access_token, debug, pr_no=pr_no)
-        prs = [open_pr_request.json()]
+        prs = [open_pr_request]
 except BitbucketException:
     traceback.print_exc()
     err(str(e))

@@ -6,6 +6,7 @@
 import sys
 import json
 import requests
+import time
 from requests.auth import HTTPBasicAuth, AuthBase
 
 ERROR_MAP = {
@@ -54,29 +55,56 @@ def json_pp(json_object):
         raise NameError('Must be a dictionary or json-formatted string')
 
 
-def get_open_prs(project, repo, access_token, debug, state='OPEN', pr_no='', **kwargs):
+def get_prs(project, repo, access_token, debug, pr_no='', next_page=False, pages=3, **kwargs):
     """ Get open pull requests for project/repo
     """
 
     get_url = (
         "https://api.bitbucket.org/2.0/repositories/"
-        "{project}/{repo}/pullrequests/{pr_no}?pagelen=30&state={state}".format(
-        project=project, repo=repo, pr_no=pr_no, state=state)
+        "{project}/{repo}/pullrequests/{pr_no}".format(
+        project=project, repo=repo, pr_no=pr_no)
     )
-    for k,v in kwargs.items():
-        get_url = "{url}?{k}={v}".format(url=get_url,k=k,v=v)
+    for i, (k,v) in enumerate(kwargs.items()):
+        fill = '&' if i else '?'
+        get_url = "{url}{fill}{k}={v}".format(url=get_url,fill=fill,k=k,v=v)
 
     r = requests.get(
         get_url,
         auth=BitbucketOAuth(access_token)
     )
+    request_count = 1
 
     if debug:
         err("request result: " + str(r))
 
     check_status_code(r)
 
-    return r
+    # Return only the json object is pr_no was specified
+    # since `r.json()['values']` will not exist
+    if pr_no:
+        return r.json()
+    # Return the list of results associated with `values`
+    # and iterate over the full set of pages if `next`
+    # has been specified as True
+    else:
+        result = r.json()['values']
+        if next_page:
+            # While there is a next page and we have not gone
+            # over the page limit, continue requesting pages
+            while r.json().get('next') and (request_count-1) < pages:
+                next_url = r.json().get('next')
+                r = requests.get(
+                    next_url,
+                    auth=BitbucketOAuth(access_token)
+                )
+                result += r.json()['values']
+                request_count += 1
+                if debug:
+                    err("request result: " + str(r))
+                check_status_code(r)
+                time.sleep(2)
+
+    return result, request_count
 
 
 def check_status_code(request):
