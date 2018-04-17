@@ -36,7 +36,8 @@ for pr in open_pr_request:
     result.append({
         "pr_no": str(pr["id"]),
         "commit": str(pr['source']['commit']['hash'][:8]),
-        "repo": str(pr['source']['repository']['name'])
+        "repo": str(pr['source']['repository']['name']),
+        "state": str(pr['state'])
     })
 
 print(json.dumps(result[::-1], indent=2))
