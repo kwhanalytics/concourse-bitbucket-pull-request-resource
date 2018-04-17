@@ -9,9 +9,6 @@ from bitbucket import (
     json_pp, err, request_access_token, get_prs, BitbucketException
 )
 
-def get_item_key(item):
-	return item["updated_on"]
-
 j = json.loads(sys.stdin.read())
 debug = j['source'].get('debug', False)
 
