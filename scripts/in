@@ -11,6 +11,8 @@ from bitbucket import (
     json_pp, err, request_access_token, get_prs, BitbucketException
 )
 
+# Concourse prefer dictionaries in arrays as output with name
+# value pairings
 def reformat(key, value):
     return {
         "name": str(key),
@@ -73,10 +75,10 @@ except BitbucketException:
     err(str(e))
     exit(1)
 
-# Concourse prefer dictionaries in arrays as output
-
 metadata = []
 pr_list = []
+# If processing all prs in the list, put the prs
+# in a list of lists to write out to a file
 if all_prs:
     for data in prs[::-1]:
         pr = []
@@ -88,9 +90,14 @@ if all_prs:
         pr.append(reformat("url", data['links']['html']['href']))
         pr.append(reformat("pr_no", data['id']))
         pr.append(reformat("repo", data['source']['repository']['name']))
+        pr.append(reformat("state", data['state']))
         pr_list.append(pr)
+    # We still need a resultant written to stdout
+    # so record that here
     for val in pr_list[-1]:
         metadata.append(val)
+# If we are not processing all prs, we are just processing
+# the most recent
 else:
     for data in prs:
         metadata.append(reformat("author", data["author"]["display_name"]))
@@ -99,8 +106,11 @@ else:
         metadata.append(reformat("commit", data['source']['commit']['hash'][:8]))
         metadata.append(reformat("username", data['author']['username']))
         metadata.append(reformat("url", data['links']['html']['href']))
+        metadata.append(reformat("repo", data['source']['repository']['name']))
+        metadata.append(reformat("state", data['state']))
 
 
+# Write out the result to stdout
 result = {
     "version": version,
     "metadata": metadata
