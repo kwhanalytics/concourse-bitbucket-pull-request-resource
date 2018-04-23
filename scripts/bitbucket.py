@@ -82,7 +82,7 @@ def get_prs(project, repo, access_token, debug, pr_no='', next_page=False, pages
     # Return only the json object is pr_no was specified
     # since `r.json()['values']` will not exist
     if pr_no:
-        return r.json()
+        return r.json(), request_count
     # Return the list of results associated with `values`
     # and iterate over the full set of pages if `next`
     # has been specified as True
