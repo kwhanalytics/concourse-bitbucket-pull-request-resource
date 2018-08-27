@@ -115,7 +115,8 @@ else:
         metadata.append(reformat("url", data['links']['html']['href']))
         metadata.append(reformat("repo", data['source']['repository']['name']))
         metadata.append(reformat("state", data['state']))
-        metadata.append(reformat("diff", get_diff(project, repo, access_token, data['id'])))
+        if diff:
+            metadata.append(reformat("diff", get_diff(project, repo, access_token, data['id'])))
 
 
 # Write out the result to stdout
