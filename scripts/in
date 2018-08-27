@@ -8,7 +8,7 @@ import traceback
 import collections
 import yaml
 from bitbucket import (
-    json_pp, err, request_access_token, get_prs, BitbucketException
+    json_pp, err, request_access_token, get_prs, BitbucketException, get_diff
 )
 
 # Concourse prefer dictionaries in arrays as output with name
@@ -47,9 +47,10 @@ project = j['source']['project']
 repo = j['source']['repo']
 client_id = j['source']['client_id']
 secret = j['source']['secret']
-all_prs = j['source'].get('all_prs',False)
-state = j['source'].get('state','OPEN')
-pages = j['source'].get('pages',3)
+all_prs = j['source'].get('all_prs', False)
+state = j['source'].get('state', 'OPEN')
+pages = j['source'].get('pages', 3)
+diff = j['source'].get('return_diff', False)
 
 # Version vars
 version = j['version']
@@ -92,6 +93,11 @@ if all_prs:
         pr.append(reformat("pr_no", data['id']))
         pr.append(reformat("repo", data['source']['repository']['name']))
         pr.append(reformat("state", data['state']))
+
+        # Obtain the diff count if specified
+        if diff:
+            pr.append(reformat("diff", get_diff(project, repo, access_token, data['id'])))
+
         pr_list.append(pr)
     # We still need a resultant written to stdout
     # so record that here
@@ -109,6 +115,7 @@ else:
         metadata.append(reformat("url", data['links']['html']['href']))
         metadata.append(reformat("repo", data['source']['repository']['name']))
         metadata.append(reformat("state", data['state']))
+        metadata.append(reformat("diff", get_diff(project, repo, access_token, data['id'])))
 
 
 # Write out the result to stdout
@@ -129,7 +136,7 @@ with open(os.path.join(output_dir, "version.yaml"), "w") as fp:
 
 if all_prs:
     err(len(pr_list))
-    pr_path = os.path.join(output_dir,'prs')
+    pr_path = os.path.join(output_dir, 'prs')
     os.mkdir(pr_path)
     with open(os.path.join(pr_path, "prs.yaml"), "w") as fp:
         print(yaml.dump(pr_list, default_flow_style=False), file=fp)

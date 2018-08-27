@@ -66,7 +66,7 @@ def get_prs(project, repo, access_token, debug, pr_no='', next_page=False, pages
     )
     for i, (k,v) in enumerate(kwargs.items()):
         fill = '&' if i else '?'
-        get_url = "{url}{fill}{k}={v}".format(url=get_url,fill=fill,k=k,v=v)
+        get_url = "{url}{fill}{k}={v}".format(url=get_url, fill=fill, k=k, v=v)
 
     r = requests.get(
         get_url,
@@ -106,6 +106,27 @@ def get_prs(project, repo, access_token, debug, pr_no='', next_page=False, pages
 
     return result, request_count
 
+
+def get_diff(project, repo, access_token, pr_no):
+    """ Returns diff of specified pull request
+    """
+
+    get_url = (
+        "https://api.bitbucket.org/2.0/repositories/"
+        "{project}/{repo}/pullrequests/{pr_no}/diff".format(
+        project=project, repo=repo, pr_no=pr_no)
+    )
+
+    r = requests.get(
+        get_url,
+        auth=BitbucketOAuth(access_token)
+    )
+
+    check_status_code(r)
+
+    # If the PR contains no diff, then the string
+    # referenced in content will be empty
+    return r.content
 
 def check_status_code(request):
     """ Check status code. Bitbucket brakes rest a bit by returning 200 or 201
