@@ -42,7 +42,7 @@ for pr in pr_request:
     }
     if diff:
         diff_result = len(get_diff(project, repo, access_token, pr['id']))
-        pr_info["diff"] = diff_result
+        pr_info["diff"] = str(diff_result)
     result.append(pr_info)
 
 
