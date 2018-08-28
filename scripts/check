@@ -19,6 +19,7 @@ client_id = j['source']['client_id']
 secret = j['source']['secret']
 state = j['source'].get('state','OPEN')
 pages = j['source'].get('pages', 3)
+pagelen = j['source'].get('pagelen', 50)
 diff = j['source'].get('return_diff', False)
 
 # Get the access token for the repo and get the open PRs
@@ -26,7 +27,7 @@ try:
     access_token = request_access_token(client_id, secret, debug)
     pr_request, request_count = get_prs(project, repo, access_token,
                                         debug, state=state, next_page=True,
-                                        pages=pages, pagelen=50)
+                                        pages=pages, pagelen=pagelen)
 except BitbucketException:
     traceback.print_exc()
     err(str(e))
