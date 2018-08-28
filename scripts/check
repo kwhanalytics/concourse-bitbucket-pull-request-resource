@@ -6,7 +6,7 @@ import sys
 import json
 import traceback
 from bitbucket import (
-    json_pp, err, request_access_token, get_prs, BitbucketException
+    json_pp, err, request_access_token, get_prs, BitbucketException, get_diff
 )
 
 j = json.loads(sys.stdin.read())
@@ -19,6 +19,7 @@ client_id = j['source']['client_id']
 secret = j['source']['secret']
 state = j['source'].get('state','OPEN')
 pages = j['source'].get('pages', 3)
+diff = j['source'].get('return_diff', False)
 
 # Get the access token for the repo and get the open PRs
 try:
@@ -33,11 +34,16 @@ except BitbucketException:
 
 result = []
 for pr in pr_request:
-    result.append({
+    pr_info = {
         "pr_no": str(pr["id"]),
         "commit": str(pr['source']['commit']['hash'][:8]),
         "repo": str(pr['source']['repository']['name']),
-        "state": str(pr['state'])
-    })
+        "state": str(pr['state']),
+    }
+    if diff:
+        diff_result = len(get_diff(project, repo, access_token, pr['id']))
+        pr_info["diff"] = diff_result
+    result.append(pr_info)
+
 
 print(json.dumps(result[::-1], indent=2))
