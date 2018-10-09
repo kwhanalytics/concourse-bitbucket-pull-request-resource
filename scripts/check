@@ -42,13 +42,8 @@ for pr in pr_request:
         "state": str(pr['state']),
     }
     if diff:
-        try:
-            diff_result = len(get_diff(project, repo, access_token, pr['id']))
-            pr_info["diff"] = str(diff_result)
-        except Exception:
-            print(pr_info)
-            raise
-
+        diff_result = len(get_diff(project, repo, access_token, pr['id']))
+        pr_info["diff"] = str(diff_result)
     result.append(pr_info)
 
 
