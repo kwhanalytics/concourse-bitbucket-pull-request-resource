@@ -137,7 +137,7 @@ def check_status_code(request):
         try:
             msg = ERROR_MAP[request.status_code]
         except KeyError:
-            msg = json_pp(r.json())
+            msg = json_pp(request.json())
 
         raise BitbucketException(msg)
 
