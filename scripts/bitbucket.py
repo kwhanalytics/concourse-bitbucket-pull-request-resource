@@ -116,11 +116,22 @@ def get_diff(project, repo, access_token, pr_no):
         "{project}/{repo}/pullrequests/{pr_no}/diff".format(
         project=project, repo=repo, pr_no=pr_no)
     )
+    err('Getting diff for {}'.format(pr_no))
 
     r = requests.get(
         get_url,
         auth=BitbucketOAuth(access_token)
     )
+
+    if r.status_code == 555:
+        # Implement an loop to retry
+        for i in range(1, 3):
+            err('Request hit {}, retrying {}th time'.format(r.status_code, i))
+            time.sleep(5)
+            r = requests.get(
+                get_url,
+                auth=BitbucketOAuth(access_token)
+            )
 
     check_status_code(r)
 
@@ -133,11 +144,11 @@ def check_status_code(request):
     depending on it's the first time the status is posted.
     """
 
-    if request.status_code not in [200, 201]:
+    if request.status_code not in [200, 201, 555]:
         try:
             msg = ERROR_MAP[request.status_code]
         except KeyError:
-            msg = json_pp(r.json())
+            msg = json_pp(request.json())
 
         raise BitbucketException(msg)
 
