@@ -125,7 +125,7 @@ def get_diff(project, repo, access_token, pr_no):
 
     if r.status_code == 555:
         # Implement an loop to retry
-        for i in xrange(1, 3):
+        for i in range(1, 3):
             err('Request hit {}, retrying {}th time'.format(r.status_code, i))
             time.sleep(5)
             r = requests.get(
