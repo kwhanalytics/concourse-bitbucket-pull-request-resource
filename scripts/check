@@ -37,7 +37,7 @@ result = []
 for pr in pr_request:
     pr_info = {
         "pr_no": str(pr["id"]),
-        "commit": str(pr['source']['commit']['hash'][:8]),
+        "commit": str(pr['source']['commit']['hash'][:16]),
         "repo": str(pr['source']['repository']['name']),
         "state": str(pr['state']),
     }
