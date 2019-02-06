@@ -91,7 +91,7 @@ def get_prs(project, repo, access_token, debug, pr_no='', next_page=False, pages
         if next_page:
             # While there is a next page and we have not gone
             # over the page limit, continue requesting pages
-            while r.json().get('next') and (request_count - 1) < pages:
+            while r.json().get('next') and (request_count) < pages:
                 next_url = r.json().get('next')
                 r = requests.get(
                     next_url,
