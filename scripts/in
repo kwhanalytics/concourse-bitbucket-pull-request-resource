@@ -10,6 +10,7 @@ import yaml
 from bitbucket import (
     json_pp, err, request_access_token, get_prs, BitbucketException, get_diff
 )
+from utils import greater_than_days_cutoff
 
 # Concourse prefer dictionaries in arrays as output with name
 # value pairings
@@ -52,6 +53,7 @@ state = j['source'].get('state', 'OPEN')
 pages = j['source'].get('pages', 3)
 pagelen = j['source'].get('pagelen', 50)
 diff = j['source'].get('return_diff', False)
+time_cutoff = j['source'].get('time_cutoff', 14) # Number of days for cutoff
 
 # Version vars
 version = j['version']
@@ -84,6 +86,13 @@ pr_list = []
 # in a list of lists to write out to a file
 if all_prs:
     for data in prs[::-1]:
+
+        # Check PR is not older than cutoff
+        if greater_than_days_cutoff(data['updated_on'], time_cutoff):
+            err('PR {} is older than {}. Not passing down.'
+                .format(data['pr_no'], time_cutoff))
+            continue
+
         pr = []
         pr.append(reformat("author", data["author"]["display_name"]))
         pr.append(reformat("source", data["source"]["branch"]["name"]))
