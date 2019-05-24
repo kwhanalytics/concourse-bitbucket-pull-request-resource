@@ -5,9 +5,11 @@ import os
 import sys
 import json
 import traceback
+from datetime import datetime
 from bitbucket import (
     json_pp, err, request_access_token, get_prs, BitbucketException, get_diff
 )
+from utils import greater_than_days_cutoff
 
 j = json.loads(sys.stdin.read())
 debug = j['source'].get('debug', False)
@@ -21,6 +23,7 @@ state = j['source'].get('state','OPEN')
 pages = j['source'].get('pages', 3)
 pagelen = j['source'].get('pagelen', 50)
 diff = j['source'].get('return_diff', False)
+time_cutoff = j['source'].get('time_cutoff', 14) # Number of days for cutoff
 
 # Get the access token for the repo and get the open PRs
 try:
@@ -41,6 +44,12 @@ for pr in pr_request:
         "repo": str(pr['source']['repository']['name']),
         "state": str(pr['state']),
     }
+
+    if greater_than_days_cutoff(pr['updated_on'], time_cutoff):
+        err('PR {} latest update is older than {} days. Not passing down.'
+            .format(pr_info['pr_no'], time_cutoff))
+        continue
+
     if diff:
         diff_result = len(get_diff(project, repo, access_token, pr['id']))
         pr_info["diff"] = str(diff_result)
