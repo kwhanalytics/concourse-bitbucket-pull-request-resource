@@ -89,7 +89,7 @@ if all_prs:
 
         # Check PR is not older than cutoff
         if greater_than_days_cutoff(data['updated_on'], time_cutoff):
-            err('PR {} is older than {}. Not passing down.'
+            err('PR {} latest update is older than {} days. Not passing down.'
                 .format(data['id'], time_cutoff))
             continue
 
