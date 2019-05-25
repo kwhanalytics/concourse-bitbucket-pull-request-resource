@@ -49,6 +49,9 @@ for pr in pr_request:
         err('PR {} latest update is older than {} days. Not passing down.'
             .format(pr_info['pr_no'], time_cutoff))
         continue
+    else:
+        err('PR {} latest update is less than {} days. Passing to concourse.'
+            .format(pr_info['pr_no'], time_cutoff))
 
     if diff:
         diff_result = len(get_diff(project, repo, access_token, pr['id']))

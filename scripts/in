@@ -89,9 +89,12 @@ if all_prs:
 
         # Check PR is not older than cutoff
         if greater_than_days_cutoff(data['updated_on'], time_cutoff):
-            err('PR {} latest update is older than {} days. Not passing down.'
+            err('PR {} latest update is older than {} days. Not passing to concourse.'
                 .format(data['id'], time_cutoff))
             continue
+        else:
+            err('PR {} latest update is less than {} days. Passing to concourse.'
+                .format(data['id'], time_cutoff))
 
         pr = []
         pr.append(reformat("author", data["author"]["display_name"]))
