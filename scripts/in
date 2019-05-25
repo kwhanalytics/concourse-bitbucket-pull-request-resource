@@ -95,6 +95,7 @@ if all_prs:
         else:
             err('PR {} latest update is less than {} days. Passing to concourse.'
                 .format(data['id'], time_cutoff))
+            err('Latest update: {}'.format(data['updated_on']))
 
         pr = []
         pr.append(reformat("author", data["author"]["display_name"]))
