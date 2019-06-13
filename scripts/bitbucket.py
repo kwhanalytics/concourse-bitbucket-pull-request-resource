@@ -7,6 +7,7 @@ import sys
 import json
 import requests
 import time
+import re
 from requests.auth import HTTPBasicAuth, AuthBase
 
 ERROR_MAP = {
@@ -109,6 +110,8 @@ def get_prs(project, repo, access_token, debug, pr_no='', next_page=False, pages
 
 def get_diff(project, repo, access_token, pr_no):
     """ Returns diff of specified pull request
+        If files_changed is set to True, then the function will return
+        the content and the files changed in the pull request
     """
 
     get_url = (
@@ -135,9 +138,18 @@ def get_diff(project, repo, access_token, pr_no):
 
     check_status_code(r)
 
-    # If the PR contains no diff, then the string
-    # referenced in content will be empty
-    return r.content
+    # Access the files by performing a regex on the diff
+    # Files are referenced in the diff in the following format
+    files_in_diff = re.findall("diff --git a/(.*?) b", r.content)
+
+    # Check in case the format changes in the future
+    # If there is a diff, that means a file has changed and so
+    # there must also be a file in the diff
+    if r.content
+        assert len(files_in_diff) > 0, "Diff is not empty but the regex is returning no files in diff."
+
+    return r.content, files_in_diff
+
 
 def check_status_code(request):
     """ Check status code. Bitbucket brakes rest a bit by returning 200 or 201
