@@ -140,7 +140,7 @@ def get_diff(project, repo, access_token, pr_no):
 
     # Access the files by performing a regex on the diff
     # Files are referenced in the diff in the following format
-    files_in_diff = re.findall("diff --git a/(.*?) b", r.content)
+    files_in_diff = re.findall("diff --git a/(.*?) b", str(r.content))
 
     # Check in case the format changes in the future
     # If there is a diff, that means a file has changed and so
@@ -148,7 +148,7 @@ def get_diff(project, repo, access_token, pr_no):
     if r.content:
         assert len(files_in_diff) > 0, "Diff is not empty but the regex is returning no files in diff."
 
-    return r.content, files_in_diff
+    return str(r.content), files_in_diff
 
 
 def check_status_code(request):
