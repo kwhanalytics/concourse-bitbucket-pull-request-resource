@@ -145,7 +145,7 @@ def get_diff(project, repo, access_token, pr_no):
     # Check in case the format changes in the future
     # If there is a diff, that means a file has changed and so
     # there must also be a file in the diff
-    if r.content
+    if r.content:
         assert len(files_in_diff) > 0, "Diff is not empty but the regex is returning no files in diff."
 
     return r.content, files_in_diff
