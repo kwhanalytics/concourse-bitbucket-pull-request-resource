@@ -52,8 +52,8 @@ for pr in pr_request:
 
     if diff:
         try:
-            diff_result = len(get_diff(project, repo, access_token, pr['id']))
-            pr_info["diff"] = str(diff_result)
+            diff_result, _ = get_diff(project, repo, access_token, pr['id'])
+            pr_info["diff"] = str(len(diff_result))
         except Exception:
             print(pr_info)
             raise
