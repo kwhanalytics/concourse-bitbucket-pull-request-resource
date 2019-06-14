@@ -107,7 +107,7 @@ if all_prs:
         # Obtain the diff count if specified
         if diff:
             content, files_changed = get_diff(project, repo, access_token, data['id'])
-            pr.append(reformat("diff", content))
+            pr.append(reformat("diff", len(content)))
             pr.append(reformat("files_changed", files_changed))
 
         pr_list.append(pr)
@@ -129,7 +129,7 @@ else:
         metadata.append(reformat("state", data['state']))
         if diff:
             content, files_changed = get_diff(project, repo, access_token, data['id'])
-            metadata.append(reformat("diff", content))
+            metadata.append(reformat("diff", len(content)))
             metadata.append(reformat("files_changed", files_changed))
 
 
