@@ -53,9 +53,15 @@ for pr in pr_request:
         err('PR {} latest update is less than {} days. Passing to concourse.'
             .format(pr_info['pr_no'], time_cutoff))
 
+    # Check diff information and add it to the resultant dictionary
     if diff:
-        diff_result = len(get_diff(project, repo, access_token, pr['id']))
-        pr_info["diff"] = str(diff_result)
+        try:
+            diff_result, _ = get_diff(project, repo, access_token, pr['id'])
+            pr_info["diff"] = str(len(diff_result))
+        except Exception:
+            err(pr_info)
+            raise
+
     result.append(pr_info)
 
 
