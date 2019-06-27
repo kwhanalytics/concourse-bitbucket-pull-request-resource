@@ -57,7 +57,7 @@ for pr in pr_request:
     if diff:
         try:
             diff_result, _ = get_diff(project, repo, access_token, pr['id'])
-            pr_info["diff"] = str(len(diff_result.decode("utf-8")))
+            pr_info["diff"] = str(len(diff_result))
         except Exception:
             err(pr_info)
             raise
