@@ -112,9 +112,10 @@ if all_prs:
         if diff:
             content, files_changed = get_diff(project, repo, access_token, data['id'])
             if len(content) < 20:
-                err('Diff content: {}'.format(content.decode("utf-8")))
-                err('Diff size: {}'.format(len(content.decode("utf-8"))))
-            pr.append(reformat("diff", len(content.decode("utf-8"))))
+                err('Diff content: {}'.format(content))
+                err('Type: {}'.format(type(content)))
+                err('Diff size: {}'.format(len(content)))
+            pr.append(reformat("diff", len(content)))
             pr.append(reformat("files_changed", files_changed))
 
         pr_list.append(pr)
