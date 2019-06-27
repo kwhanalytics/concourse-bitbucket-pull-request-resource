@@ -148,7 +148,7 @@ def get_diff(project, repo, access_token, pr_no):
     if r.content:
         assert len(files_in_diff) > 0, "Diff is not empty but the regex is returning no files in diff."
 
-    return str(r.content), files_in_diff
+    return r.content.decode('utf-8'), files_in_diff
 
 
 def check_status_code(request):
