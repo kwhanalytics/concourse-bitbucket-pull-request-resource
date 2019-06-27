@@ -111,6 +111,9 @@ if all_prs:
         # Obtain the diff count if specified
         if diff:
             content, files_changed = get_diff(project, repo, access_token, data['id'])
+            if len(content) < 20:
+                err('Diff content: {}'.format(content))
+                err('Diff size: {}'.format(len(content)))
             pr.append(reformat("diff", len(content)))
             pr.append(reformat("files_changed", files_changed))
 
