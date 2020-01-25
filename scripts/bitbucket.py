@@ -189,11 +189,13 @@ def get_and_retry(get_url, auth):
     """
     err('Getting {}'.format(get_url))
     max_retries = 10
-    r = requests.get(get_url, auth=auth)
-    if r.status_code in (555, 429):
-        # Implement an loop to retry
-        for i in range(1, max_retries):
-            err('Request hit {}, retrying {}th time'.format(r.status_code, i))
-            time.sleep(5)
-            r = requests.get(get_url, auth=auth)
+    for i in range(1, max_retries):
+        r = requests.get(get_url, auth=auth)
+        if r.status_code not in (555, 429):
+            break
+        delay = 5*i
+        time.sleep(delay)
+        err('Response {}, sleeping {} seconds'.format(r.status_code, delay))
+        err('Retry {}'.format(i))
+
     return r
