@@ -13,7 +13,9 @@ from requests.auth import HTTPBasicAuth, AuthBase
 ERROR_MAP = {
     403: "HTTP 403 Forbidden - Does your bitbucket user have rights to the repo?",
     404: "HTTP 404 Not Found - Does the repo supplied exist?",
-    400: "HTTP 401 Unauthorized - Are your bitbucket credentials correct?"}
+    400: "HTTP 401 Unauthorized - Are your bitbucket credentials correct?",
+    429: "HTTP 429 Too many requests",
+    }
 
 
 class BitbucketException(Exception):
@@ -69,7 +71,7 @@ def get_prs(project, repo, access_token, debug, pr_no='', next_page=False, pages
         fill = '&' if i else '?'
         get_url = "{url}{fill}{k}={v}".format(url=get_url, fill=fill, k=k, v=v)
 
-    r = requests.get(
+    r = get_and_retry(
         get_url,
         auth=BitbucketOAuth(access_token)
     )
@@ -94,7 +96,7 @@ def get_prs(project, repo, access_token, debug, pr_no='', next_page=False, pages
             # over the page limit, continue requesting pages
             while r.json().get('next') and (request_count) < pages:
                 next_url = r.json().get('next')
-                r = requests.get(
+                r = get_and_retry(
                     next_url,
                     auth=BitbucketOAuth(access_token)
                 )
@@ -121,20 +123,10 @@ def get_diff(project, repo, access_token, pr_no):
     )
     err('Getting diff for {}'.format(pr_no))
 
-    r = requests.get(
+    r = get_and_retry(
         get_url,
         auth=BitbucketOAuth(access_token)
     )
-
-    if r.status_code == 555:
-        # Implement an loop to retry
-        for i in range(1, 3):
-            err('Request hit {}, retrying {}th time'.format(r.status_code, i))
-            time.sleep(5)
-            r = requests.get(
-                get_url,
-                auth=BitbucketOAuth(access_token)
-            )
 
     check_status_code(r)
 
@@ -160,7 +152,7 @@ def check_status_code(request):
         try:
             msg = ERROR_MAP[request.status_code]
         except KeyError:
-            msg = json_pp(request.json())
+            msg = "Response: {}\n{}".format(request.status_code, request.text)
 
         raise BitbucketException(msg)
 
@@ -187,4 +179,21 @@ def request_access_token(client_id, secret, debug):
 
         raise BitbucketException(msg)
 
-    return r.json()['access_token']   
+    return r.json()['access_token']
+
+def get_and_retry(get_url, auth):
+    """ Make a get request to the given url using the BitbucketOAuth object.
+    Return the response object.
+
+    Retry if there is an intermittent error.
+    """
+    err('Getting {}'.format(get_url))
+    max_retries = 10
+    r = requests.get(get_url, auth=auth)
+    if r.status_code in (555, 429):
+        # Implement an loop to retry
+        for i in range(1, max_retries):
+            err('Request hit {}, retrying {}th time'.format(r.status_code, i))
+            time.sleep(5)
+            r = requests.get(get_url, auth=auth)
+    return r
